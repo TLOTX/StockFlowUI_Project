@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="StockFlowUI e-commerce fulfillment demonstration for U.I. Ventures Limited">
+  <title>StockFlowUI | U.I. Ventures</title>
+  <link rel="stylesheet" href="StockFlowUI.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="StockFlowUI home">
+      <div class="brand-mark" aria-hidden="true">SF</div>
+      <div>
+        <strong>StockFlowUI</strong>
+        <span>U.I. Ventures fulfillment</span>
+      </div>
+    </a>
+
+    <div class="topbar-tools">
+      <span class="workspace-label"><span class="online-dot"></span> Demo workspace</span>
+      <label class="role-control">
+        Viewing as
+        <select id="roleSelect" aria-label="Choose a demonstration role"></select>
+      </label>
+    </div>
+  </header>
+
+  <main class="page" id="top">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">UNIVERSITY OF IBADAN</p>
+        <h1>Order fulfillment</h1>
+        <p class="muted">Follow online orders from receiving through delivery, with returns recorded in one place.</p>
+      </div>
+      <div class="intro-actions">
+        <span class="demo-pill"><span aria-hidden="true">●</span> Frontend demonstration</span>
+        <button class="button light" id="exportButton"><span aria-hidden="true">↓</span> Export data</button>
+      </div>
+    </section>
+
+    <section class="stats" id="stats" aria-live="polite"></section>
+    <section id="view" aria-live="polite"></section>
+
+    <footer>
+      <span>StockFlowUI · local demonstration data</span>
+      <button class="text-button" id="resetButton">Reset demonstration data</button>
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="StockFlowUI.js"></script>
+</body>
+</html>
