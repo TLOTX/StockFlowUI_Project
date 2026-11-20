@@ -16,6 +16,7 @@
   --shadow: 0 10px 28px rgba(25, 48, 75, 0.055);
 }
 
+/* Reset and shared page defaults. */
 * {
   box-sizing: border-box;
 }
@@ -38,6 +39,7 @@ textarea {
   font: inherit;
 }
 
+/* Keyboard users get one clear, consistent focus indicator. */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -47,6 +49,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* Top navigation and workspace controls. */
 .topbar {
   display: flex;
   height: 76px;
@@ -134,6 +137,7 @@ textarea:focus-visible {
   font: inherit;
 }
 
+/* Main content width and the page introduction. */
 .page {
   max-width: 1200px;
   margin: 0 auto;
@@ -190,6 +194,7 @@ textarea:focus-visible {
   font-size: 8px;
 }
 
+/* Shared button styles and the available visual variants. */
 .button {
   padding: 10px 14px;
   border: 0;
@@ -234,6 +239,7 @@ textarea:focus-visible {
   cursor: not-allowed;
 }
 
+/* Summary cards at the top of the dashboard. */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -281,6 +287,7 @@ textarea:focus-visible {
   letter-spacing: -0.03em;
 }
 
+/* White panels provide the main grouping for each page section. */
 .panel {
   margin-bottom: 17px;
   padding: 21px;
@@ -319,6 +326,7 @@ textarea:focus-visible {
   font-size: 12px;
 }
 
+/* Customer-facing product catalog cards. */
 .catalog {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -381,6 +389,7 @@ textarea:focus-visible {
   width: 70px;
 }
 
+/* Form fields are styled together so checkout and returns feel consistent. */
 .field {
   display: flex;
   flex-direction: column;
@@ -429,6 +438,7 @@ textarea:focus-visible {
   grid-column: 1 / -1;
 }
 
+/* Checkout and tracking sit side by side on larger screens. */
 .split {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
@@ -440,6 +450,7 @@ textarea:focus-visible {
   height: 100%;
 }
 
+/* Shared line-item styles for carts and review lists. */
 .cart-line,
 .order-line,
 .inventory-line,
@@ -486,6 +497,7 @@ textarea:focus-visible {
   font-weight: 750;
 }
 
+/* Empty states, status badges, and order cards. */
 .empty {
   padding: 21px;
   border: 1px dashed rgb(199, 210, 222);
@@ -571,6 +583,7 @@ textarea:focus-visible {
   margin-top: 12px;
 }
 
+/* Visual stage tracker for the order fulfillment workflow. */
 .stage-track {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -599,6 +612,7 @@ textarea:focus-visible {
   font-weight: 780;
 }
 
+/* Inventory table and lightweight text actions. */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -640,6 +654,7 @@ textarea:focus-visible {
   text-decoration: underline;
 }
 
+/* Informational notices and return-request details. */
 .notice {
   margin: 10px 0;
   padding: 12px 14px;
@@ -670,6 +685,7 @@ textarea:focus-visible {
   flex: 1;
 }
 
+/* Page footer and temporary feedback toast. */
 footer {
   display: flex;
   align-items: center;
@@ -701,6 +717,7 @@ footer {
   transform: translateY(0);
 }
 
+/* Two-column and full-width layouts adapt for smaller screens. */
 @media (max-width: 900px) {
   .catalog {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -805,6 +822,7 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  /* Respect visitors who have reduced-motion preferences enabled. */
   *,
   *::before,
   *::after {
