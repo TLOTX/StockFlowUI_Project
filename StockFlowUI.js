@@ -1,5 +1,6 @@
 'use strict';
 
+// Shared configuration: browser storage key, available roles, and order stages.
 const STORE_KEY = 'stockflowui.demo.v2';
 const ROLES = [
   'Customer',
@@ -17,6 +18,7 @@ const STAGES = [
   'Delivered'
 ];
 
+// Start with a small catalog that represents the U.I. divisions.
 const START_PRODUCTS = [
   {
     id: 'bread',
@@ -72,7 +74,7 @@ const START_PRODUCTS = [
 const SAMPLE_ORDERS = [
   {
     id: 'SF-2601',
-    customer: 'Amina Okafor',
+    customer: 'Markpowell Chukwuemeka Chika',
     method: 'Campus delivery',
     location: 'Mellanby Hall',
     items: [
@@ -100,7 +102,7 @@ const SAMPLE_ORDERS = [
   },
   {
     id: 'SF-2602',
-    customer: 'Daniel Adeyemi',
+    customer: 'Yusuf Mutiat Adeyemi',
     method: 'Pickup',
     location: 'U.I. Printing Press',
     items: [
@@ -205,8 +207,10 @@ let cart = {};
 let role = 'Customer';
 let toastTimer;
 
+// A short helper for finding elements, so repeated DOM lookups stay readable.
 const $ = (id) => document.getElementById(id);
 
+// Load saved browser data when it is valid, otherwise use a fresh demo state.
 function loadData() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORE_KEY));
@@ -236,6 +240,7 @@ function save() {
   render();
 }
 
+// Keep display-only formatting in one place so prices and values stay consistent.
 function money(amount) {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -268,6 +273,7 @@ function makeId() {
   return `SF-${timePart}-${randomPart}`;
 }
 
+// Dashboard summary numbers are recalculated whenever the demo data changes.
 function renderStats() {
   const pendingOrders = data.orders.filter((order) => order.stage !== 'Delivered').length;
   const openReturns = data.returns.filter((item) => item.status === 'Pending review').length;
@@ -307,6 +313,7 @@ function render() {
   $('view').innerHTML = views[role]();
 }
 
+// Order cards use the stage list to show completed, current, and upcoming steps.
 function stageClass(order, stage) {
   const currentIndex = STAGES.indexOf(order.stage);
   const stageIndex = STAGES.indexOf(stage);
@@ -388,6 +395,7 @@ function orderList(orders, showActions = true) {
   return orders.map((order) => orderCard(order, showActions)).join('');
 }
 
+// Customer view: browse products, build a cart, place orders, and request returns.
 function customerView() {
   const products = data.products.map((product) => `
     <article class="product">
@@ -573,6 +581,7 @@ function returnStatusClass(status) {
   return 'warn';
 }
 
+// Store view: maintain inventory, prepare received orders, and review returns.
 function storeView() {
   const inventoryRows = data.products.map((product) => `
     <tr>
@@ -616,6 +625,7 @@ function storeView() {
   `;
 }
 
+// Fulfillment view: move stored orders through picking and packing.
 function fulfillmentView() {
   const activeOrders = data.orders.filter((order) => ['Stored', 'Picked'].includes(order.stage));
   return `
@@ -628,6 +638,7 @@ function fulfillmentView() {
   `;
 }
 
+// Dispatch view: manage packed orders and their delivery handoff.
 function dispatchView() {
   const deliveryOrders = data.orders.filter((order) => ['Packed', 'Out for Delivery'].includes(order.stage));
   return `
@@ -640,6 +651,7 @@ function dispatchView() {
   `;
 }
 
+// Administrator view: gives a broad overview of orders, returns, and divisions.
 function adminView() {
   const deliveredCount = data.orders.filter((order) => order.stage === 'Delivered').length;
 
@@ -673,6 +685,7 @@ function adminView() {
   `;
 }
 
+// Checkout: turn the current cart into a new received order and reduce stock.
 function placeOrder() {
   const items = Object.entries(cart)
     .filter(([, quantity]) => quantity > 0)
@@ -728,6 +741,7 @@ function placeOrder() {
   showToast(`Order ${order.id} received.`);
 }
 
+// Advance an order only if the selected role is allowed to act at its current stage.
 function advanceOrder(id) {
   const order = data.orders.find((item) => item.id === id);
   if (!order) return;
@@ -746,6 +760,7 @@ function advanceOrder(id) {
   showToast(`${order.id} updated to ${nextStage}.`);
 }
 
+// Create a pending return request for an item from a delivered order.
 function submitReturn() {
   const order = data.orders.find((item) => item.id === $('returnOrder').value);
   if (!order || order.stage !== 'Delivered') {
@@ -777,6 +792,7 @@ function submitReturn() {
   showToast('Return request recorded.');
 }
 
+// Review a return: damaged items stay out of stock; usable items are restored.
 function handleReturn(id, approve) {
   const request = data.returns.find((item) => item.id === id);
   if (!request || request.status !== 'Pending review') return;
@@ -795,6 +811,7 @@ function handleReturn(id, approve) {
     : 'Return declined.');
 }
 
+// Route button clicks to the matching cart, order, stock, or return action.
 function handleAction(button) {
   const { id, action } = button.dataset;
 
@@ -841,6 +858,7 @@ function handleAction(button) {
   }
 }
 
+// Keep the item and quantity selectors in the return form in sync.
 function updateReturnItems() {
   const order = data.orders.find((item) => item.id === $('returnOrder')?.value);
   const itemSelect = $('returnItem');
@@ -857,6 +875,7 @@ function updateReturnItems() {
   quantityInput.value = '1';
 }
 
+// Export a copy of the live demonstration data as a JSON file.
 function exportData() {
   const file = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(file);
@@ -868,6 +887,7 @@ function exportData() {
   showToast('Data export downloaded.');
 }
 
+// Shared event handling for dynamically rendered buttons and forms.
 document.addEventListener('click', (event) => {
   const button = event.target.closest('[data-action]');
   if (button) handleAction(button);
@@ -892,13 +912,16 @@ document.addEventListener('change', (event) => {
   }
 });
 
+// Switching roles changes the whole view and clears role-specific cart state.
 $('roleSelect').addEventListener('change', (event) => {
   role = event.target.value;
   cart = {};
   render();
 });
 
+// Toolbar actions: export the current state or reset it after confirmation.
 $('exportButton').addEventListener('click', exportData);
+// Reset is the only destructive action in the demo, so it always asks first.
 $('resetButton').addEventListener('click', () => {
   const shouldReset = confirm('Reset all StockFlowUI demonstration orders, returns, and stock changes in this browser?');
   if (!shouldReset) return;
