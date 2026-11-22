@@ -89,7 +89,7 @@ const START_PRODUCTS = [
 const SAMPLE_ORDERS = [
   {
     id: 'SF-2601',
-    customer: 'Markpowell Chukwuemeka Chika',
+    customer: 'Markpowell Chika',
     method: 'Campus delivery',
     location: 'Mellanby Hall',
     items: [
@@ -117,7 +117,7 @@ const SAMPLE_ORDERS = [
   },
   {
     id: 'SF-2602',
-    customer: 'Yusuf Mutiat Adeyemi',
+    customer: 'Yusuf Mutiat',
     method: 'Pickup',
     location: 'U.I. Printing Press',
     items: [
@@ -177,7 +177,7 @@ const SAMPLE_ORDERS = [
   },
   {
     id: 'SF-2605',
-    customer: 'Zainab Yusuf',
+    customer: 'Yusuff Kehinde',
     method: 'Campus delivery',
     location: 'Queen Idia Hall',
     items: [
