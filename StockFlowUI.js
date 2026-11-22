@@ -9,6 +9,21 @@ const ROLES = [
   'Dispatch Rider',
   'Administrator'
 ];
+const ROLE_EMOJIS = {
+  Customer: '🛍️',
+  'Store Clerk': '🏬',
+  'Fulfillment Officer': '📦',
+  'Dispatch Rider': '🛵',
+  Administrator: '🧑‍💼'
+};
+const PRODUCT_EMOJIS = {
+  bread: '🍞',
+  pie: '🥧',
+  flyer: '📰',
+  card: '💳',
+  water: '💧',
+  fuel: '⛽'
+};
 const STAGES = [
   'Received',
   'Stored',
@@ -122,7 +137,7 @@ const SAMPLE_ORDERS = [
   },
   {
     id: 'SF-2603',
-    customer: 'Tomi Bello',
+    customer: 'Akinleye Pamilerin',
     method: 'Campus delivery',
     location: 'Faculty of Science',
     items: [
@@ -142,7 +157,7 @@ const SAMPLE_ORDERS = [
   },
   {
     id: 'SF-2604',
-    customer: 'Chidi Nwosu',
+    customer: 'Taiwo Yusuff',
     method: 'Pickup',
     location: 'U.I. Bakery',
     items: [
@@ -249,6 +264,16 @@ function money(amount) {
   }).format(amount);
 }
 
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Time unavailable';
+
+  return new Intl.DateTimeFormat('en-NG', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date);
+}
+
 function safe(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
     '&': '&amp;',
@@ -298,7 +323,9 @@ function render() {
 
   const roleSelect = $('roleSelect');
   if (!roleSelect.options.length) {
-    roleSelect.innerHTML = ROLES.map((item) => `<option>${item}</option>`).join('');
+    roleSelect.innerHTML = ROLES.map((item) => `
+      <option value="${safe(item)}">${ROLE_EMOJIS[item]} ${safe(item)}</option>
+    `).join('');
     roleSelect.value = role;
   }
 
@@ -340,9 +367,10 @@ function orderCard(order, showActions = true) {
       ? 'warn'
       : '';
   const itemText = order.items
-    .map((item) => `${item.quantity} × ${safe(item.name)}`)
+    .map((item) => `${PRODUCT_EMOJIS[item.productId] || '📦'} ${item.quantity} × ${safe(item.name)}`)
     .join(', ');
   let actionHtml = '';
+  let confirmationHtml = '';
 
   if (showActions) {
     const nextStage = STAGES[STAGES.indexOf(order.stage) + 1];
@@ -354,18 +382,72 @@ function orderCard(order, showActions = true) {
     if (nextStage && canMove) {
       actionHtml += `
         <button class="button primary" data-action="advance" data-id="${order.id}">
-          Mark ${safe(nextStage)}
+          ${role === 'Dispatch Rider' ? '🛵 ' : ''}Mark ${safe(nextStage)}
         </button>
       `;
     }
+  }
 
-    if (role === 'Customer' && order.stage === 'Delivered') {
-      actionHtml += `
-        <button class="button light" data-action="return-order" data-id="${order.id}">
-          Request a return
-        </button>
-      `;
-    }
+  if (role === 'Customer' && order.stage === 'Delivered' && !order.customerConfirmedAt) {
+    confirmationHtml = `
+      <form class="delivery-confirm-form form-grid" data-order-id="${safe(order.id)}">
+        <div class="field">
+          <label for="rating-${safe(order.id)}">Rate your delivery (1 to 5)</label>
+          <select id="rating-${safe(order.id)}" name="rating" required>
+            <option value="">Choose a rating</option>
+            <option value="1">1 / 5 - Needs improvement</option>
+            <option value="2">2 / 5</option>
+            <option value="3">3 / 5 - Okay</option>
+            <option value="4">4 / 5</option>
+            <option value="5">5 / 5 - Excellent</option>
+          </select>
+        </div>
+        <label class="return-toggle">
+          <input type="checkbox" data-return-toggle>
+          I need to return an item from this order
+        </label>
+        <fieldset class="delivery-return-fields form-grid" data-return-fields hidden disabled>
+          <legend>Return details</legend>
+          <div class="field">
+            <label for="confirm-return-item-${safe(order.id)}">Item to return</label>
+            <select id="confirm-return-item-${safe(order.id)}" name="returnItem">
+              ${order.items.map((item) => `
+                <option value="${safe(item.productId)}" data-quantity="${item.quantity}">
+                  ${PRODUCT_EMOJIS[item.productId] || '📦'} ${safe(item.name)}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label for="confirm-return-quantity-${safe(order.id)}">Quantity</label>
+            <input id="confirm-return-quantity-${safe(order.id)}" name="returnQuantity"
+              type="number" min="1" max="${order.items[0]?.quantity || 1}" value="1">
+          </div>
+          <div class="field">
+            <label for="confirm-return-condition-${safe(order.id)}">Item condition</label>
+            <select id="confirm-return-condition-${safe(order.id)}" name="returnCondition">
+              <option>Usable</option>
+              <option>Damaged</option>
+            </select>
+          </div>
+          <div class="field wide">
+            <label for="confirm-return-reason-${safe(order.id)}">Reason for return</label>
+            <textarea id="confirm-return-reason-${safe(order.id)}" name="returnReason"
+              required maxlength="300" placeholder="Tell us what went wrong"></textarea>
+          </div>
+        </fieldset>
+        <div class="wide">
+          <button class="button primary" type="submit">Confirm delivery and submit rating</button>
+        </div>
+      </form>
+    `;
+  } else if (role === 'Customer' && order.customerConfirmedAt) {
+    confirmationHtml = `
+      <p class="delivery-confirmed">
+        ✅ Delivery confirmed ${formatDateTime(order.customerConfirmedAt)}
+        · Rating: ${safe(order.rating)} / 5
+      </p>
+    `;
   }
 
   return `
@@ -383,9 +465,13 @@ function orderCard(order, showActions = true) {
       <div class="order-meta">
         <span>${safe(order.location)}</span>
         <span>Total ${money(order.total)}</span>
+        ${order.stage === 'Delivered' ? `
+          <span>🛵 Rider delivered at ${order.deliveredAt ? formatDateTime(order.deliveredAt) : 'time not recorded'}</span>
+        ` : ''}
       </div>
       ${stageTrack(order)}
       ${actionHtml ? `<div class="order-actions">${actionHtml}</div>` : ''}
+      ${confirmationHtml}
     </article>
   `;
 }
@@ -401,7 +487,7 @@ function customerView() {
     <article class="product">
       <div class="product-top">
         <div>
-          <div class="product-name">${safe(product.name)}</div>
+          <div class="product-name"><span aria-hidden="true">${PRODUCT_EMOJIS[product.id] || '📦'}</span> ${safe(product.name)}</div>
           <div class="product-division">${safe(product.division)}</div>
         </div>
         <div class="price">${money(product.price)}</div>
@@ -425,7 +511,7 @@ function customerView() {
       return `
         <div class="cart-line">
           <div>
-            <strong>${safe(product.name)}</strong>
+            <strong>${PRODUCT_EMOJIS[product.id] || '📦'} ${safe(product.name)}</strong>
             <small>${quantity} ${safe(product.unit)} × ${money(product.price)}</small>
           </div>
           <button class="text-button" data-action="remove-cart" data-id="${id}">Remove</button>
@@ -442,7 +528,7 @@ function customerView() {
     <section class="panel">
       <div class="panel-head">
         <div>
-          <h2>Browse products</h2>
+          <h2>🛍️ Browse products</h2>
           <p>Choose an item and quantity to create a demonstration order.</p>
         </div>
       </div>
@@ -453,7 +539,7 @@ function customerView() {
       <section class="panel">
         <div class="panel-head">
           <div>
-            <h2>Checkout</h2>
+            <h2>🧺 Checkout</h2>
             <p>Submit a campus pickup or delivery request.</p>
           </div>
         </div>
@@ -486,7 +572,7 @@ function customerView() {
       <section class="panel">
         <div class="panel-head">
           <div>
-            <h2>Order tracking</h2>
+            <h2>📍 Order tracking</h2>
             <p>Current status of demonstration orders.</p>
           </div>
         </div>
@@ -529,11 +615,11 @@ function returnForm() {
       </div>
       <div class="field">
         <label for="returnItem">Item to return</label>
-        <select id="returnItem"></select>
+        <select id="returnItem" name="returnItem"></select>
       </div>
       <div class="field">
         <label for="returnQuantity">Quantity</label>
-        <input id="returnQuantity" type="number" min="1" value="1" required>
+        <input id="returnQuantity" name="returnQuantity" type="number" min="1" value="1" required>
       </div>
       <div class="field">
         <label for="returnCondition">Item condition</label>
@@ -560,7 +646,7 @@ function returnList(returns, showControls) {
     <div class="return-line">
       <div>
         <strong>${safe(item.orderId)}
-          <span class="return-item">${safe(item.quantity || 1)} × ${safe(item.itemName || 'order item')}</span>
+          <span class="return-item">${PRODUCT_EMOJIS[item.productId] || '📦'} ${safe(item.quantity || 1)} × ${safe(item.itemName || 'order item')}</span>
         </strong>
         <small>${safe(item.reason)} · ${safe(item.condition)} item · ${safe(item.created)}</small>
       </div>
@@ -585,7 +671,7 @@ function returnStatusClass(status) {
 function storeView() {
   const inventoryRows = data.products.map((product) => `
     <tr>
-      <td>${safe(product.name)}</td>
+      <td>${PRODUCT_EMOJIS[product.id] || '📦'} ${safe(product.name)}</td>
       <td>${safe(product.division)}</td>
       <td>${product.stock} ${safe(product.unit)}</td>
       <td>
@@ -644,7 +730,7 @@ function dispatchView() {
   return `
     <section class="panel">
       <div class="panel-head">
-        <div><h2>Delivery queue</h2><p>Confirm dispatch and handover for campus orders.</p></div>
+        <div><h2>🛵 Delivery queue</h2><p>Record the handoff time, then the customer can confirm and rate delivery.</p></div>
       </div>
       ${orderList(deliveryOrders)}
     </section>
@@ -756,8 +842,61 @@ function advanceOrder(id) {
   const nextStage = STAGES[stageIndex + 1];
   order.stage = nextStage;
   order.history.push(nextStage);
+  if (nextStage === 'Delivered') order.deliveredAt = new Date().toISOString();
   save();
-  showToast(`${order.id} updated to ${nextStage}.`);
+  showToast(nextStage === 'Delivered'
+    ? `${order.id} marked delivered at ${formatDateTime(order.deliveredAt)}.`
+    : `${order.id} updated to ${nextStage}.`);
+}
+
+function createReturnRequest(order, returnedProduct, quantity, condition, reason) {
+  data.returns.unshift({
+    id: makeId(),
+    orderId: order.id,
+    productId: returnedProduct.productId,
+    itemName: returnedProduct.name,
+    quantity,
+    reason,
+    condition,
+    status: 'Pending review',
+    created: new Date().toLocaleString()
+  });
+}
+
+function confirmDelivery(form) {
+  const order = data.orders.find((item) => item.id === form.dataset.orderId);
+  const rating = Number(form.elements.rating.value);
+  if (!order || order.stage !== 'Delivered' || order.customerConfirmedAt) return;
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    showToast('Choose a delivery rating from 1 to 5.');
+    return;
+  }
+
+  const returnToggle = form.querySelector('[data-return-toggle]');
+  if (returnToggle.checked) {
+    const returnedProduct = order.items.find((item) => item.productId === form.elements.returnItem.value);
+    const quantity = Math.floor(Number(form.elements.returnQuantity.value));
+    const reason = form.elements.returnReason.value.trim();
+    if (!returnedProduct || quantity < 1 || quantity > returnedProduct.quantity || !reason) {
+      showToast('Enter valid return details before confirming delivery.');
+      return;
+    }
+
+    createReturnRequest(
+      order,
+      returnedProduct,
+      quantity,
+      form.elements.returnCondition.value,
+      reason
+    );
+  }
+
+  order.customerConfirmedAt = new Date().toISOString();
+  order.rating = rating;
+  save();
+  showToast(returnToggle.checked
+    ? 'Delivery confirmed, rating saved, and return request submitted.'
+    : 'Delivery confirmed and rating saved.');
 }
 
 // Create a pending return request for an item from a delivered order.
@@ -775,17 +914,13 @@ function submitReturn() {
     return;
   }
 
-  data.returns.unshift({
-    id: makeId(),
-    orderId: order.id,
-    productId: returnedProduct.productId,
-    itemName: returnedProduct.name,
+  createReturnRequest(
+    order,
+    returnedProduct,
     quantity,
-    reason: $('returnReason').value.trim(),
-    condition: $('returnCondition').value,
-    status: 'Pending review',
-    created: new Date().toLocaleString()
-  });
+    $('returnCondition').value,
+    $('returnReason').value.trim()
+  );
 
   save();
   updateReturnItems();
@@ -897,14 +1032,21 @@ document.addEventListener('submit', (event) => {
   event.preventDefault();
   if (event.target.id === 'checkoutForm') placeOrder();
   if (event.target.id === 'returnForm') submitReturn();
+  if (event.target.matches('.delivery-confirm-form')) confirmDelivery(event.target);
 });
 
 document.addEventListener('change', (event) => {
+  if (event.target.matches('[data-return-toggle]')) {
+    const returnFields = event.target.form.querySelector('[data-return-fields]');
+    returnFields.hidden = !event.target.checked;
+    returnFields.disabled = !event.target.checked;
+  }
+
   if (event.target.id === 'returnOrder') updateReturnItems();
 
-  if (event.target.id === 'returnItem') {
+  if (event.target.name === 'returnItem') {
     const option = event.target.selectedOptions[0];
-    const quantityInput = $('returnQuantity');
+    const quantityInput = event.target.form.elements.returnQuantity;
     if (!quantityInput) return;
 
     quantityInput.max = option?.dataset.quantity || 1;

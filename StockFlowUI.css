@@ -583,6 +583,55 @@ textarea:focus-visible {
   margin-top: 12px;
 }
 
+.delivery-confirm-form {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.return-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+  color: rgb(67, 85, 106);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.return-toggle input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--blue);
+}
+
+.delivery-return-fields {
+  min-width: 0;
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.delivery-return-fields[hidden] {
+  display: none;
+}
+
+.delivery-return-fields legend {
+  padding: 0 5px;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.delivery-confirmed {
+  margin: 12px 0 0;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 650;
+}
+
 /* Visual stage tracker for the order fulfillment workflow. */
 .stage-track {
   display: grid;
